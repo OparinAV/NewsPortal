@@ -1,0 +1,17 @@
+{% extends 'flatpages/default.html' %}
+
+
+{% block title %}
+news_detail
+{% endblock title %}
+
+{% block content %}
+
+<h5>{% if object.positions == 'article' %}Статья{% else %}Новость{% endif %} от автора {{ news_detail.author.user }}: "{{news_detail.title}}"</h5>
+
+<h5>{{news_detail.content}}</h5>
+<h5>{{ news_detail.created|date:'d M Y'  }}</h5>
+
+<h5>---------</h5>
+
+{% endblock content %}
