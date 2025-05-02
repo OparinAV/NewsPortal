@@ -80,7 +80,7 @@ def send_weekly_digest(self):
             # Собираем последние новости по категории
             posts = Post.objects.filter(
                 category=category,
-                creationDate__gte=last_week,
+                created__gte=last_week,
             )
             if not posts.exists():
                 continue  # Пропускаем категории без новых постов
