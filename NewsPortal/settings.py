@@ -13,11 +13,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-4of0*$xjhrsvz^rn15!ln$bwq+wevay5k#973!wgr@abr!ha#l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['127.0.0.1']
@@ -203,3 +206,135 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache_files'), # Указываем, куда будем сохранять кэшируемые файлы! Не забываем создать папку cache_files внутри папки с manage.py!
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    # ————— ФОРМАТТЕРЫ —————
+    'formatters': {
+        # Для вывода в консоль (DEBUG и выше)
+        'console_formatter': {
+            'format': '{asctime} {levelname} message:{message} [path:{pathname}] [exc:{exc_info}]',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        # Для general.log (INFO и выше)
+        'general_formatter': {
+            'format': '{asctime} {levelname} module:{module} message:{message}',
+            'style': '{',
+        },
+        # Для errors.log (ERROR и CRITICAL)
+        'error_formatter': {
+            'format': '{asctime} {levelname} message:{message} path:{pathname}\n{exc_info}',
+            'style': '{',
+        },
+        # Для security.log (только django.security)
+        'security_formatter': {
+            'format': '{asctime} {levelname} module:{module} message:{message}',
+            'style': '{',
+        },
+        # Для почты (без exc_info)
+        'mail_formatter': {
+            'format': 'Time: {asctime}\nLevel: {levelname}\nPath: {pathname}\nMessage: {message}',
+            'style': '{',
+        },
+    },
+
+    # ————— ФИЛЬТРЫ —————
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+
+    # ————— ОБРАБОТЧИКИ —————
+    'handlers': {
+        # Вывод в консоль
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'console_formatter',
+        },
+        # Логи уровня INFO и выше в файл general.log
+        'file_general': {
+            'level': 'INFO',
+            'filters': ['require_debug_false'],
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'general.log'),
+            'formatter': 'general_formatter',
+        },
+        # Логи уровня ERROR и CRITICAL в файл errors.log
+        'file_errors': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'errors.log'),
+            'formatter': 'error_formatter',
+        },
+        # Логи безопасности в файл security.log
+        'file_security': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'security.log'),
+            'formatter': 'security_formatter',
+        },
+        # Отправка ошибок на почту
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'mail_formatter',
+        },
+    },
+
+    # ————— ЛОГГЕРЫ —————
+    'loggers': {
+        # Основной логгер Django
+        'django': {
+            'handlers': ['console', 'file_general', 'file_errors', 'file_security', 'mail_admins'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        # Логгер запросов
+        'django.request': {
+            'handlers': ['file_errors', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Логгер сервера
+        'django.server': {
+            'handlers': ['file_errors', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Логгер шаблонов
+        'django.template': {
+            'handlers': ['file_errors'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Логгер БД
+        'django.db.backends': {
+            'handlers': ['file_errors'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Логгер безопасности
+        'django.security': {
+            'handlers': ['file_security'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
