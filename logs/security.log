@@ -1,0 +1,4 @@
+2025-06-08 14:57:12,314 INFO module:autoreload message:Watching for file changes with StatReloader
+2025-06-08 14:58:00,707 INFO module:autoreload message:Watching for file changes with StatReloader
+2025-06-08 14:58:19,163 INFO module:autoreload message:C:\Users\—Õ Ëƒ\PycharmProjects\DjangoProjects\NewsPortal\NewsPortal\settings.py changed, reloading.
+2025-06-08 14:58:21,516 INFO module:autoreload message:Watching for file changes with StatReloader
